@@ -60,16 +60,6 @@ class CoreDataStack: NSObject {
         return coordinator
     }()
     
-    lazy var managedObjectContext: NSManagedObjectContext = {
-        // Returns the managed object context for the application (which is already bound to the persistent store coordinator for the application.) This property is optional since there are legitimate error conditions that could cause the creation of the context to fail.
-        let coordinator = persistentStoreCoordinator
-        var managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        managedObjectContext.persistentStoreCoordinator = coordinator
-        managedObjectContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        
-        return managedObjectContext
-    }()
-    
     @available(iOS 10.0, *)
     lazy var persistentContainer: NSPersistentContainer = {
         /*
@@ -98,18 +88,25 @@ class CoreDataStack: NSObject {
         return container
     }()
     
+    lazy var managedObjectContext: NSManagedObjectContext = {
+        var context: NSManagedObjectContext
+        if #available(iOS 10.0, *) {
+            context = self.persistentContainer.viewContext
+        } else {
+            // Returns the managed object context for the application (which is already bound to the persistent store coordinator for the application.) This property is optional since there are legitimate error conditions that could cause the creation of the context to fail.
+            let coordinator = persistentStoreCoordinator
+            context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+            context.persistentStoreCoordinator = coordinator
+            context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        }
+        
+        return context
+    }()
+    
     // MARK: - Core Data Saving support
     
     func saveContext () {
-        var context: NSManagedObjectContext
-        
-//        if #available(iOS 10.0, *) {
-//            context = self.persistentContainer.viewContext
-//        } else {
-//            context = self.managedObjectContext
-//        }
-        
-        context = self.managedObjectContext
+        let context = self.managedObjectContext
         
         if context.hasChanges {
             do {

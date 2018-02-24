@@ -21,6 +21,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let photoVC = PhotoVC()
         window?.rootViewController = UINavigationController(rootViewController: photoVC)
         
+        // Print sqlite path - Copy From /Users/
+        print("My Coredata DB path: \(CoreDataStack.shared.applicationDocumentsDirectory)")
+        
         return true
     }
 
@@ -45,7 +48,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
-        CoreDataStack.sharedInstance.saveContext()
+        CoreDataStack.shared.saveContext()
     }
 
 }

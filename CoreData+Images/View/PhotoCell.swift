@@ -37,12 +37,18 @@ class PhotoCell: UITableViewCell {
         tagsLabel.font = UIFont.systemFont(ofSize: 14)
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+    }
+    
     func setPhotoCellWith(photo: Photo) {
         DispatchQueue.main.async {
             self.authorLabel.text = photo.author
             self.tagsLabel.text = photo.tags
             if let url = photo.mediaURL {
-                self.photoImageView.loadImageUsingCacheWithURLString(url, placeHolder: UIImage(named: "placeholder"))
+                self.photoImageView
+                    .loadImageUsingCacheWithURLString(url,
+                                                      placeHolder: UIImage(named: "placeholder"))
             }
         }
     }

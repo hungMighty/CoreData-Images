@@ -16,16 +16,9 @@ class PhotoVC: UITableViewController {
     lazy var fetchedhResultController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: Photo.self))
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "author", ascending: true)]
-        
-        var context: NSManagedObjectContext
-        if #available(iOS 10.0, *) {
-            context = CoreDataStack.sharedInstance.persistentContainer.viewContext
-        } else {
-            // Fallback on earlier versions
-            context = CoreDataStack.sharedInstance.managedObjectContext
-        }
-        
-        let frc = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: context,
+        let context = CoreDataStack.shared.managedObjectContext
+        let frc = NSFetchedResultsController(fetchRequest: fetchRequest,
+                                             managedObjectContext: context,
                                              sectionNameKeyPath: nil, cacheName: nil)
         frc.delegate = self
         return frc
@@ -36,7 +29,8 @@ class PhotoVC: UITableViewController {
         
         self.title = "Photos Feed"
         view.backgroundColor = .white
-        tableView.register(UINib.init(nibName: PhotoCell.nibName, bundle: nil), forCellReuseIdentifier: PhotoCell.id)
+        tableView.register(UINib.init(nibName: PhotoCell.nibName, bundle: nil),
+                           forCellReuseIdentifier: PhotoCell.id)
         updateTableContent()
     }
     
@@ -79,7 +73,11 @@ class PhotoVC: UITableViewController {
 extension PhotoVC {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: PhotoCell.id, for: indexPath) as! PhotoCell
+        guard let cell = tableView
+            .dequeueReusableCell(withIdentifier: PhotoCell.id,
+                                 for: indexPath) as? PhotoCell else {
+                                    return UITableViewCell()
+        }
         if let photo = fetchedhResultController.object(at: indexPath) as? Photo {
             cell.setPhotoCellWith(photo: photo)
         }
@@ -103,14 +101,7 @@ extension PhotoVC {
 extension PhotoVC {
     
     private func createPhotoEntityFrom(dictionary: [String: AnyObject]) -> NSManagedObject? {
-        var context: NSManagedObjectContext
-        if #available(iOS 10.0, *) {
-            context = CoreDataStack.sharedInstance.persistentContainer.viewContext
-        } else {
-            // Fallback on earlier versions
-            context = CoreDataStack.sharedInstance.managedObjectContext
-        }
-        
+        let context = CoreDataStack.shared.managedObjectContext
         if let photoEntity = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: context) as? Photo {
             photoEntity.author = dictionary["author"] as? String
             photoEntity.tags = dictionary["tags"] as? String
@@ -124,13 +115,7 @@ extension PhotoVC {
     private func saveInCoreDataWith(array: [[String: AnyObject]]) {
         _ = array.map { self.createPhotoEntityFrom(dictionary: $0) }
         do {
-            var context: NSManagedObjectContext
-            if #available(iOS 10.0, *) {
-                context = CoreDataStack.sharedInstance.persistentContainer.viewContext
-            } else {
-                // Fallback on earlier versions
-                context = CoreDataStack.sharedInstance.managedObjectContext
-            }
+            let context = CoreDataStack.shared.managedObjectContext
             try context.save()
             
         } catch let error {
@@ -140,19 +125,16 @@ extension PhotoVC {
     
     private func clearData() {
         do {
-            var context: NSManagedObjectContext
-            if #available(iOS 10.0, *) {
-                context = CoreDataStack.sharedInstance.persistentContainer.viewContext
-            } else {
-                // Fallback on earlier versions
-                context = CoreDataStack.sharedInstance.managedObjectContext
-            }
+            let context = CoreDataStack.shared.managedObjectContext
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(
+                entityName: String(describing: Photo.self)
+            )
             
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: Photo.self))
             do {
                 let objects  = try context.fetch(fetchRequest) as? [NSManagedObject]
                 _ = objects.map { $0.map{ context.delete($0) } }
-                CoreDataStack.sharedInstance.saveContext()
+                print("All Photos are deleted")
+                CoreDataStack.shared.saveContext()
                 
             } catch let error {
                 print("ERROR DELETING : \(error)")

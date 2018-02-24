@@ -159,11 +159,11 @@ extension PhotoVC: NSFetchedResultsControllerDelegate {
         switch type {
         case .insert:
             if newIndexPath != nil {
-                self.tableView.insertRows(at: [newIndexPath!], with: .automatic)
+                self.tableView.insertRows(at: [newIndexPath!], with: .fade)
             }
         case .delete:
             if indexPath != nil {
-                self.tableView.deleteRows(at: [indexPath!], with: .automatic)
+                self.tableView.deleteRows(at: [indexPath!], with: .fade)
             }
         default:
             break

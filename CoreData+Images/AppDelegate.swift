@@ -20,7 +20,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.makeKeyAndVisible()
         let photoVC = PhotoVC()
         window?.rootViewController = UINavigationController(rootViewController: photoVC)
-        CoreDataStack.sharedInstance.applicationDocumentsDirectory()
         
         return true
     }

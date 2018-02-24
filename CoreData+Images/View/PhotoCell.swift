@@ -20,6 +20,22 @@ class PhotoCell: UITableViewCell {
     static let id = String(describing: PhotoCell.self)
     static let nibName = String(describing: PhotoCell.self)
     
+    var photo: Photo? {
+        didSet {
+            guard let photo = photo else {
+                return
+            }
+            self.authorLabel.text = photo.author
+            self.tagsLabel.text = photo.tags
+            
+            if let url = photo.mediaURL {
+                self.photoImageView
+                    .loadImageUsingCacheWithURLString(url,
+                                                      placeHolder: UIImage(named: "placeholder"))
+            }
+        }
+    }
+    
     
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -41,17 +57,6 @@ class PhotoCell: UITableViewCell {
         super.layoutSubviews()
     }
     
-    func setPhotoCellWith(photo: Photo) {
-        DispatchQueue.main.async {
-            self.authorLabel.text = photo.author
-            self.tagsLabel.text = photo.tags
-            if let url = photo.mediaURL {
-                self.photoImageView
-                    .loadImageUsingCacheWithURLString(url,
-                                                      placeHolder: UIImage(named: "placeholder"))
-            }
-        }
-    }
 }
 
 

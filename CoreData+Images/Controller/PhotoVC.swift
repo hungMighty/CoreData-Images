@@ -12,14 +12,17 @@ import CoreData
 
 class PhotoVC: UITableViewController {
     
-    
-    lazy var fetchedhResultController: NSFetchedResultsController<NSFetchRequestResult> = {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: Photo.self))
+    lazy var fetchedResultController: NSFetchedResultsController<NSFetchRequestResult> = {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(
+            entityName: String(describing: Photo.self)
+        )
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "author", ascending: true)]
         let context = CoreDataStack.shared.managedObjectContext
+        
         let frc = NSFetchedResultsController(fetchRequest: fetchRequest,
                                              managedObjectContext: context,
-                                             sectionNameKeyPath: nil, cacheName: nil)
+                                             sectionNameKeyPath: nil,
+                                             cacheName: nil)
         frc.delegate = self
         return frc
     }()
@@ -36,9 +39,9 @@ class PhotoVC: UITableViewController {
     
     fileprivate func updateTableContent() {
         do {
-            try self.fetchedhResultController.performFetch()
-            print("COUNT FETCHED FIRST: \(self.fetchedhResultController.sections?[0].numberOfObjects)")
-            print("COUNT FETCHED TOTAL \(self.fetchedhResultController.fetchedObjects?.count)")
+            try self.fetchedResultController.performFetch()
+            print("COUNT FETCHED FIRST: \(self.fetchedResultController.sections?[0].numberOfObjects)")
+            print("COUNT FETCHED TOTAL \(self.fetchedResultController.fetchedObjects?.count)")
             
         } catch let error  {
             print("ERROR: \(error)")
@@ -78,15 +81,15 @@ extension PhotoVC {
                                  for: indexPath) as? PhotoCell else {
                                     return UITableViewCell()
         }
-        if let photo = fetchedhResultController.object(at: indexPath) as? Photo {
-            cell.setPhotoCellWith(photo: photo)
+        if let photo = fetchedResultController.object(at: indexPath) as? Photo {
+            cell.photo = photo
         }
         
         return cell
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if let count = fetchedhResultController.sections?.first?.numberOfObjects {
+        if let count = fetchedResultController.sections?.first?.numberOfObjects {
             return count
         }
         return 0
@@ -102,7 +105,10 @@ extension PhotoVC {
     
     private func createPhotoEntityFrom(dictionary: [String: AnyObject]) -> NSManagedObject? {
         let context = CoreDataStack.shared.managedObjectContext
-        if let photoEntity = NSEntityDescription.insertNewObject(forEntityName: "Photo", into: context) as? Photo {
+        if let photoEntity = NSEntityDescription
+            .insertNewObject(forEntityName: "Photo", into: context)
+            as? Photo {
+            
             photoEntity.author = dictionary["author"] as? String
             photoEntity.tags = dictionary["tags"] as? String
             let mediaDictionary = dictionary["media"] as? [String: AnyObject]
@@ -131,7 +137,7 @@ extension PhotoVC {
             )
             
             do {
-                let objects  = try context.fetch(fetchRequest) as? [NSManagedObject]
+                let objects = try context.fetch(fetchRequest) as? [NSManagedObject]
                 _ = objects.map { $0.map{ context.delete($0) } }
                 print("All Photos are deleted")
                 CoreDataStack.shared.saveContext()
@@ -146,13 +152,19 @@ extension PhotoVC {
 
 extension PhotoVC: NSFetchedResultsControllerDelegate {
     
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
+                    didChange anObject: Any, at indexPath: IndexPath?,
+                    for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         
         switch type {
         case .insert:
-            self.tableView.insertRows(at: [newIndexPath!], with: .automatic)
+            if newIndexPath != nil {
+                self.tableView.insertRows(at: [newIndexPath!], with: .automatic)
+            }
         case .delete:
-            self.tableView.deleteRows(at: [indexPath!], with: .automatic)
+            if indexPath != nil {
+                self.tableView.deleteRows(at: [indexPath!], with: .automatic)
+            }
         default:
             break
         }
@@ -165,11 +177,7 @@ extension PhotoVC: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.beginUpdates()
     }
+    
 }
-
-
-
-
-
 
 
